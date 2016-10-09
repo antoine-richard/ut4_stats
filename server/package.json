@@ -1,0 +1,23 @@
+{
+  "name": "ut4_stats_server",
+  "version": "0.0.1",
+  "description": "This is the backend for the ut4_stats it relies on MongoDB and its agregation framework as well as on Mongoose",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ut4_stats",
+    "server"
+  ],
+  "author": "Pierre Reliquet <pierre.reliquet@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "lodash": "^4.16.4",
+    "minimist": "^1.2.0",
+    "mongoose": "^4.6.3"
+  }
+}
