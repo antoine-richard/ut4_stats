@@ -1,27 +1,59 @@
 var Promise = require('bluebird');
+var _ = require('lodash');
 
 const KILL_REGEX_GLOBAL = /Kill:.+?:\s+(.+)\s+killed\s+(.+)\s+by\s+(.+)/g;
 const KILL_REGEX_SINGLE = /Kill:.+?:\s+(.+)\s+killed\s+(.+)\s+by\s+(.+)/;
 
 const LINE_SEPARATOR = '\n';
-let csvHeader='killer,victim,weapon' + LINE_SEPARATOR;
+const CSV_HEADER = 'killer,victim,weapon' + LINE_SEPARATOR;
 
-function parse(data) {
-    let matches = data.match(KILL_REGEX_GLOBAL);
-    let numberOfKills = matches.length;
-    let result = csvHeader;
+const FORMATTERS = {
+    CSV: csvFormat,
+    JSON: identity
+}
 
-    for (let i = 0; i < matches.length; i++) {
-        let oneKill = KILL_REGEX_SINGLE.exec(matches[i]);
-        let killRepresentation = getKillRepresentation(oneKill[1], oneKill[2], oneKill[3]);
-        // console.log(i + 1 + '/' + numberOfKills + ' - ' + killRepresentation);
-        result += killRepresentation + LINE_SEPARATOR;
+/**
+ * Formats the data with the provided format if no
+ * formatter is defined then it falls back to the CSV one.
+ */
+function parse(data, formatter) {
+    if (!formatter) {
+        formatter = FORMATTERS.CSV;
     }
-    return Promise.resolve(result);
+
+    var jsonKills = _(data.match(KILL_REGEX_GLOBAL))
+        .map(match => KILL_REGEX_SINGLE.exec(match))
+        .map(oneKill => getJsonRepresentation(oneKill[1], oneKill[2], oneKill[3]))
+        .value();
+
+    return Promise.resolve(formatter(jsonKills));
 }
 
-function getKillRepresentation(killer, victim, weapon) {
-    return killer + ',' + victim + ',' + weapon;
+function getJsonRepresentation(killer, victim, weapon) {
+    return {
+        killer: killer,
+        victim: victim,
+        weapon: weapon
+    };
 }
 
-module.exports = parse;
+function getCsvRepresentation(oneKill) {
+    return oneKill.killer + ',' + oneKill.victim + ',' + oneKill.weapon;
+}
+
+function csvFormat(jsonKills) {
+    let result = CSV_HEADER;
+
+    _.forEach(jsonKills, oneKill => result += getCsvRepresentation(oneKill) + LINE_SEPARATOR);
+
+    return result;
+}
+
+function identity(data) {
+    return data;
+}
+
+module.exports = {
+    parse: parse,
+    FORMATTERS: FORMATTERS
+};
