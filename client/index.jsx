@@ -1,64 +1,48 @@
 (function () {
 
+    const WORLD = "<world>"
+    const SUICIDE_CAUSES = "MOD_FALLING";
     const UT4_STATS = {
-        playerStats: {},
-        victimByKillerAndWeapon: {}
-    };
+        suicides: [],
+        clumsy: []
+    }
 
     fetchServerData()
-        .then(() => refreshTable(UT4_STATS));
+        .then(() => refreshTable(UT4_STATS.suicides, '#suicides'))
+        .then(() => refreshTable(UT4_STATS.clumsy, '#clumsy'));
 
-    function fetchServerData(pageNumber) {
-        if (!pageNumber) {
-            pageNumber = 1;
-        }
-
+    function fetchServerData() {
         let shouldContinue = true;
 
-        return fetch(`https://ut4_stats.apispark.net/v1/kills/?$page=${pageNumber}&$size=10000`)
+        return fetch(`http://home/api/stats`)
             .then(response => {
                 return response.json();
             })
-            .then(kills => {
-                kills.forEach(kill => {
-                    getStat(kill.killer).kills += 1;
-                    getStat(kill.victim).deaths += 1;
-                    addVictimKilledByKillerAndWeapon(kill.victim, kill.killer, kill.weapon);
+            .then(numberOfKillByKillerVictimWeapon => {
+                UT4_STATS.suicides = _(numberOfKillByKillerVictimWeapon)
+                    .filter(data => data['_id'].killer === WORLD)
+                    .filter(data => SUICIDE_CAUSES == data['_id'].weapon)
+                    .map(data => {
+                        return {
+                            name: data['_id'].victim,
+                            count: data.count
+                        }
+                    })
+                    .orderBy('count', 'desc')
+                    .value()
 
-                });
-                //console.log(UT4_STATS);
-                //debugger;
-                return fetchServerData(pageNumber + 1);
-
+                UT4_STATS.clumsy = _(numberOfKillByKillerVictimWeapon)
+                    .filter(data => data['_id'].killer ===  data['_id'].victim)
+                    .map(data => {
+                        return {
+                            name: data['_id'].victim,
+                            count: data.count
+                        }
+                    })
+                    .orderBy('count', 'desc')
+                    .value()
             })
             .catch(error => console.log(error));
     }
 
-    function getStat(playerName) {
-        if (!UT4_STATS.playerStats[playerName]) {
-            UT4_STATS.playerStats[playerName] = {
-                kills: 0,
-                suicide: 0,
-                spawnIntrusion: 0,
-                hotPotato: 0,
-                deaths: 0
-            };
-        }
-        return UT4_STATS.playerStats[playerName];
-    }
-
-    function addVictimKilledByKillerAndWeapon(victim, killer, weapon) {
-        if (!UT4_STATS.victimByKillerAndWeapon[killer]) {
-            UT4_STATS.victimByKillerAndWeapon[killer] = {};
-        }
-        if (!UT4_STATS.victimByKillerAndWeapon[killer][weapon]) {
-            UT4_STATS.victimByKillerAndWeapon[killer][weapon] = {};
-        }
-        if (!UT4_STATS.victimByKillerAndWeapon[killer][weapon][victim]) {
-            UT4_STATS.victimByKillerAndWeapon[killer][weapon][victim] = 0;
-        }
-        UT4_STATS.victimByKillerAndWeapon[killer][weapon][victim] += 1;
-    }
-
 })();
-
