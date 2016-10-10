@@ -1,18 +1,16 @@
-function refreshTable(ut4Stats) {
+function refreshTable(stats, selector) {
     ReactDOM.render(<table>
         <thead>
             <th>Player</th>
-            <th>Kills</th>
-            <th>Death</th>
+            <th>Count</th>
         </thead>
         <tbody>
-            {Object.keys(ut4Stats.playerStats).map(player => {
+            {_.map(stats, player => {
                 return <tr>
-                    <td>{player}</td>
-                    <td>{ut4Stats.playerStats[player].kills}</td>
-                    <td>{ut4Stats.playerStats[player].deaths}</td>
+                    <td>{player.name}</td>
+                    <td>{player.count}</td>
                 </tr>
             })}
         </tbody>
-    </table>, document.querySelector('.content'))
+    </table>, document.querySelector(selector))
 }

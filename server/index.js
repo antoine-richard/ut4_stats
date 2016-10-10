@@ -36,11 +36,9 @@ function initWebServer() {
         response.sendStatus('200');
     });
 
-    app.get('/api/kills', (request, response) => {
-        Kill.find({})
-            .then(data => {
-                return response.send(data);
-            })
+    app.get('/api/stats', (request, response) => {
+        getNumberOfKillByKillerWeaponAndVictim(Kill)
+            .then(data => response.send(data));
     });
 
     app.post('/api/kills', (request, response) => {
@@ -72,4 +70,19 @@ function getKillModel() {
             weapon: String
         })
     );
+}
+
+function getNumberOfKillByKillerWeaponAndVictim(mongoModel) {
+    return mongoModel.aggregate({
+        "$group": {
+            "_id": {
+                killer: "$killer",
+                weapon: "$weapon",
+                victim: "$victim"
+            },
+            count: {
+                "$sum": 1
+            }
+        }
+    }).exec();
 }
