@@ -38,7 +38,25 @@ function initWebServer() {
 
     app.get('/api/stats', (request, response) => {
         getNumberOfKillByKillerWeaponAndVictim(Kill)
-            .then(data => response.send(data));
+            .then(aggregatedData => {
+                // TODO check if that algorithm could be enhanced
+                var numberOfKillByKillerWeaponVictim = _(aggregatedData)
+                    .groupBy('_id.killer')
+                    .omit('_id.killer')
+                    .reduce((byKiller, originalData, killer) => {
+                        byKiller[killer] = _(originalData)
+                            .groupBy('_id.weapon')
+                            .reduce((byWeapon, killsByWeapon, weapon) => {
+                                byWeapon[weapon] = _.reduce(killsByWeapon, (deathByVictim, data) => {
+                                    _.set(deathByVictim, _.get(data, '_id.victim'), data.count);
+                                    return deathByVictim;
+                                }, {});
+                                return byWeapon;
+                            }, {});
+                        return byKiller;
+                    }, {});
+                return response.send(numberOfKillByKillerWeaponVictim);
+            });
     });
 
     app.post('/api/kills', (request, response) => {
