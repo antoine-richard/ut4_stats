@@ -1,7 +1,0 @@
-// Place your settings in this file to overwrite default and user settings.
-{
-    "editor.tabSize": 2,
-    "editor.formatOnType": true,
-    "files.trimTrailingWhitespace": true,
-    "html.format.maxPreserveNewLines": 1
-}
