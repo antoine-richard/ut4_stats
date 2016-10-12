@@ -4,7 +4,8 @@ const _ = require('lodash');
 const mongoose = require('mongoose');
 
 const parser = require('../parser/parse');
-const app = require('express')();
+const express = require('express')
+const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
@@ -28,6 +29,7 @@ mongodb.once('open', function () {
 function initWebServer() {
     app.use(bodyParser.json({ limit: '5mb' }));
     app.use(cors());
+    app.use(express.static('../client'));
 
     // TODO is it really a good idea to remove the default cache policy?
     app.disable('etag');
